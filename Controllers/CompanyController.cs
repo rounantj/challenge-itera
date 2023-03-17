@@ -1,53 +1,55 @@
-using IteraCompanyGroups.Models;
-using IteraCompanyGroups.Services;
+using IteraEmpresaGrupos.Models;
+using IteraEmpresaGrupos.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IteraCompanyGroups.Controllers
+namespace IteraEmpresaGrupos.Controllers
 {
     [ApiController]
-    [Route("empresa")]
-    public class CompanyController : ControllerBase
+    [Authorize]
+    [Route("[controller]")]
+    public class EmpresaController : ControllerBase
     {
-        private readonly CompanyService _companyService;
+        private readonly EmpresaService _EmpresaService;
 
-        public CompanyController(CompanyService companyService)
+        public EmpresaController(EmpresaService EmpresaService)
         {
-            _companyService = companyService;
+            _EmpresaService = EmpresaService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IQueryable<Company>>> Get() =>
-            Ok(await _companyService.GetCompaniesAsync());
+        public async Task<ActionResult<IQueryable<Empresa>>> Get() =>
+            Ok(await _EmpresaService.GetCompaniesAsync());
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Company>> Get(int id)
+        public async Task<ActionResult<Empresa>> Get(int id)
         {
-            var company = await _companyService.GetCompanyByIdAsync(id);
+            var Empresa = await _EmpresaService.GetEmpresaByIdAsync(id);
 
-            return company is not null ? Ok(company) : NotFound();
+            return Empresa is not null ? Ok(Empresa) : NotFound();
         }
 
         [HttpPost]
-        public async Task<ActionResult<Company>> Create(CompanyRequest companyRequest)
+        public async Task<ActionResult<Empresa>> Create(EmpresaRequest EmpresaRequest)
         {
 
             try
             {
-                var company = new Company
+                var Empresa = new Empresa
                 {
-                    Name = companyRequest.Name,
-                    Id = companyRequest.Id,
-                    Status = companyRequest.Status,
-                    DateIngestion = companyRequest.DateIngestion ?? DateTime.Now,
-                    LastUpdate = companyRequest.LastUpdate ?? DateTime.Now
+                    Name = EmpresaRequest.Name,
+                    Id = EmpresaRequest.Id,
+                    Status = EmpresaRequest.Status,
+                    DateIngestion = EmpresaRequest.DateIngestion ?? DateTime.Now,
+                    LastUpdate = EmpresaRequest.LastUpdate ?? DateTime.Now
                 };
 
-                var newCompany = await _companyService.CreateCompanyAsync(company);
+                var newEmpresa = await _EmpresaService.CreateEmpresaAsync(Empresa);
 
-                return CreatedAtAction(nameof(Get), new { id = company.Id }, newCompany);
+                return CreatedAtAction(nameof(Get), new { id = Empresa.Id }, newEmpresa);
 
 
             }
@@ -58,38 +60,38 @@ namespace IteraCompanyGroups.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, CompanyRequest companyRequest)
+        public async Task<IActionResult> Update(int id, EmpresaRequest EmpresaRequest)
         {
-            var company = await _companyService.GetCompanyByIdAsync(id);
+            var Empresa = await _EmpresaService.GetEmpresaByIdAsync(id);
 
-            if (company == null)
+            if (Empresa == null)
             {
                 return NotFound();
             }
 
-            company.Name = companyRequest.Name;
-            company.Status = companyRequest.Status;
-            company.DateIngestion = companyRequest.DateIngestion ?? DateTime.Now;
-            company.LastUpdate = companyRequest.LastUpdate ?? DateTime.Now;
+            Empresa.Name = EmpresaRequest.Name;
+            Empresa.Status = EmpresaRequest.Status;
+            Empresa.DateIngestion = EmpresaRequest.DateIngestion ?? DateTime.Now;
+            Empresa.LastUpdate = EmpresaRequest.LastUpdate ?? DateTime.Now;
 
-            var newCompany = await _companyService.UpdateCompanyAsync(id, company);
+            var newEmpresa = await _EmpresaService.UpdateEmpresaAsync(id, Empresa);
 
 
-            return CreatedAtAction(nameof(Get), new { id = company.Id }, company = newCompany);
+            return CreatedAtAction(nameof(Get), new { id = Empresa.Id }, Empresa = newEmpresa);
 
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var company = await _companyService.GetCompanyByIdAsync(id);
+            var Empresa = await _EmpresaService.GetEmpresaByIdAsync(id);
 
-            if (company == null)
+            if (Empresa == null)
             {
                 return NotFound();
             }
 
-            await _companyService.RemoveCompanyAsync(id);
+            await _EmpresaService.RemoveEmpresaAsync(id);
 
             return NoContent();
         }

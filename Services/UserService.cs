@@ -1,5 +1,5 @@
-using IteraCompanyGroups.Data;
-using IteraCompanyGroups.Models;
+using IteraEmpresaGrupos.Data;
+using IteraEmpresaGrupos.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,19 +9,20 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IteraCompanyGroups.Services
+namespace IteraEmpresaGrupos.Services
 {
     public class UserService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly LogService _logService;
+        private readonly IteraLogService _logService;
         private readonly TokenService _tokenService;
 
 
-        public UserService(IServiceScopeFactory serviceScopeFactory, LogService logService, TokenService tokenService)
+        public UserService(IServiceScopeFactory serviceScopeFactory, IteraLogService logService, TokenService tokenService)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _logService = logService;
@@ -49,6 +50,18 @@ namespace IteraCompanyGroups.Services
             return await dbContext.Users.FirstOrDefaultAsync(u => u.Name == name);
         }
 
+        public async Task<User> GetUserByNameAndPasswordAsync(string name, string password)
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            using var sha256 = SHA256.Create();
+            var hashedPassword = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            password = Convert.ToBase64String(hashedPassword);
+            return await dbContext.Users.FirstOrDefaultAsync(u => u.Name == name && u.Password == password);
+        }
+
+
         public async Task<ActionResult<User>> CreateUserAsync(User user)
         {
             using var scope = _serviceScopeFactory.CreateScope();
@@ -61,6 +74,11 @@ namespace IteraCompanyGroups.Services
                 throw new ArgumentException($"A user with email {user.Email} already exists.");
             }
 
+            // Hash da senha usando SHA256
+            using var sha256 = SHA256.Create();
+            var hashedPassword = sha256.ComputeHash(Encoding.UTF8.GetBytes(user.Password));
+            user.Password = Convert.ToBase64String(hashedPassword);
+
             user.LastUpdate = DateTime.UtcNow;
             dbContext.Users.Add(user);
             await dbContext.SaveChangesAsync();
@@ -68,7 +86,6 @@ namespace IteraCompanyGroups.Services
 
             return user;
         }
-
         public async Task<User> UpdateUserAsync(int id, User userIn)
         {
             using var scope = _serviceScopeFactory.CreateScope();
@@ -78,7 +95,7 @@ namespace IteraCompanyGroups.Services
 
             if (userToUpdate == null)
             {
-                throw new Exception("User not found");
+                throw new Exception("User não encontrado(a)");
             }
 
             // Verificar se os valores foram atualizados
@@ -114,11 +131,14 @@ namespace IteraCompanyGroups.Services
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Name == name && u.Password == password);
+            using var sha256 = SHA256.Create();
+            var hashedPassword = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            var base64Password = Convert.ToBase64String(hashedPassword);
+
+            var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Name == name && u.Password == base64Password);
 
             return user;
         }
-
         public async Task RemoveUserAsync(int id)
         {
             using var scope = _serviceScopeFactory.CreateScope();
@@ -128,7 +148,7 @@ namespace IteraCompanyGroups.Services
 
             if (userToRemove == null)
             {
-                throw new Exception("User not found");
+                throw new Exception("User não encontrado(a)");
             }
 
             dbContext.Users.Remove(userToRemove);

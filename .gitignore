@@ -1,0 +1,29 @@
+# Compiled files
+/bin/
+/obj/
+
+# NuGet packages
+*.nupkg
+/packages/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+ 
+# Visual Studio files
+.vscode/
+*.sln
+*.suo
+*.user
+*.sln.docstates
+*.bak
+
+# Other files
+Thumbs.db
+*.DS_Store

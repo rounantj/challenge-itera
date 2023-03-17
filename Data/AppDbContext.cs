@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using IteraCompanyGroups.Models;
+using IteraEmpresaGrupos.Models;
 using System;
 
 
-namespace IteraCompanyGroups.Data
+namespace IteraEmpresaGrupos.Data
 {
     public class AppDbContext : DbContext
     {
@@ -11,9 +11,9 @@ namespace IteraCompanyGroups.Data
         {
         }
 
-        public DbSet<Company> Companies { get; set; }
-        public DbSet<Group> Groups { get; set; }
-        public DbSet<Cost> Costs { get; set; }
+        public DbSet<Empresa> Companies { get; set; }
+        public DbSet<Grupo> Grupos { get; set; }
+        public DbSet<Custo> Custos { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Log> Logs { get; set; }
 

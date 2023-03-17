@@ -2,9 +2,9 @@ using System;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
 
-namespace IteraCompanyGroups.Models
+namespace IteraEmpresaGrupos.Models
 {
-    public class Group
+    public class Grupo
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -13,10 +13,10 @@ namespace IteraCompanyGroups.Models
         public DateTime DateIngestion { get; set; }
 
         public DateTime LastUpdate { get; set; }
-        public ICollection<Company> Companys { get; set; }
+        public ICollection<Empresa> Empresas { get; set; }
     }
 
-    public class GroupRequest
+    public class GrupoRequest
     {
         [JsonPropertyName("id")]
         public int Id { get; set; }

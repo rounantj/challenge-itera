@@ -6,7 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace IteraCompanyGroups.Services
+namespace IteraEmpresaGrupos.Services
 {
     public class TokenService
     {

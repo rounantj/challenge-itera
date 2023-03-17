@@ -1,6 +1,6 @@
 
 using System;
-namespace IteraCompanyGroups.Models
+namespace IteraEmpresaGrupos.Models
 {
     public class Log
     {

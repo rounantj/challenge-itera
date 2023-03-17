@@ -1,14 +1,14 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using IteraCompanyGroups.Models;
-using IteraCompanyGroups.Services;
-using System.Security.Claims;
+using IteraEmpresaGrupos.Models;
+using IteraEmpresaGrupos.Services;
 
-namespace IteraCompanyGroups.Controllers
+namespace IteraEmpresaGrupos.Controllers
 {
     [ApiController]
-    [Route("usuario")]
+    [Authorize]
+    [Route("[controller]")]
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
@@ -21,13 +21,14 @@ namespace IteraCompanyGroups.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<ActionResult<dynamic>> Login(LoginModel loginModel)
         {
-            var user = await _userService.AuthenticateAsync(loginModel.Name, loginModel.Password);
+            var user = await _userService.GetUserByNameAndPasswordAsync(loginModel.Name, loginModel.Password);
 
             if (user == null)
             {
-                return Unauthorized();
+                return Unauthorized("Nome de usuário ou senha incorretos");
             }
 
             var token = _tokenService.GenerateToken(user.Id);
@@ -36,6 +37,7 @@ namespace IteraCompanyGroups.Controllers
         }
 
         [HttpPost("refresh-token")]
+        [AllowAnonymous]
         public async Task<ActionResult<UserWithToken>> RefreshToken(TokenModel tokenModel)
         {
             var principal = _tokenService.DecodeToken(tokenModel.Token);
@@ -55,10 +57,11 @@ namespace IteraCompanyGroups.Controllers
 
         [HttpGet("me")]
         [Authorize]
-        public async Task<ActionResult<User>> GetCurrentUser()
+        public async Task<ActionResult<User>> GetCurrentUser(TokenModel tokenModel)
         {
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = await _userService.GetUserByNameAsync(userId);
+            var principal = _tokenService.DecodeToken(tokenModel.Token);
+            var username = principal.Identity?.Name;
+            var user = await _userService.GetUserByNameAsync(username);
 
             if (user == null)
             {
@@ -70,6 +73,7 @@ namespace IteraCompanyGroups.Controllers
 
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<ActionResult<User>> CreateUser(CreateUserModel userModel)
         {
             var user = new User
@@ -84,6 +88,7 @@ namespace IteraCompanyGroups.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateUser(int id, UpdateUserModel userModel)
         {
             var user = await _userService.GetUserByIdAsync(id);
@@ -145,7 +150,6 @@ namespace IteraCompanyGroups.Controllers
     public class TokenModel
     {
         public string Token { get; set; }
-        public string RefreshToken { get; set; }
     }
 
     public class LoginModel

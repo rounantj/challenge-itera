@@ -1,5 +1,5 @@
-using IteraCompanyGroups.Data;
-using IteraCompanyGroups.Models;
+using IteraEmpresaGrupos.Data;
+using IteraEmpresaGrupos.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -7,105 +7,105 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IteraCompanyGroups.Services
+namespace IteraEmpresaGrupos.Services
 {
-    public class CompanyService
+    public class EmpresaService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly LogService _logService;
+        private readonly IteraLogService _logService;
 
-        public CompanyService(IServiceScopeFactory serviceScopeFactory, LogService logService)
+        public EmpresaService(IServiceScopeFactory serviceScopeFactory, IteraLogService logService)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _logService = logService;
         }
 
-        public async Task<List<Company>> GetCompaniesAsync()
+        public async Task<List<Empresa>> GetCompaniesAsync()
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            return await dbContext.Companies.Include(c => c.Costs).ToListAsync();
+            return await dbContext.Companies.Include(c => c.Custos).ToListAsync();
         }
 
 
-        public async Task<Company> GetCompanyByIdAsync(int id)
+        public async Task<Empresa> GetEmpresaByIdAsync(int id)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            return await dbContext.Companies.Include(c => c.Costs).FirstOrDefaultAsync(company => company.Id == id);
+            return await dbContext.Companies.Include(c => c.Custos).FirstOrDefaultAsync(Empresa => Empresa.Id == id);
         }
 
 
-        public async Task<Company> CreateCompanyAsync(Company company)
+        public async Task<Empresa> CreateEmpresaAsync(Empresa Empresa)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             // verifica se já existe uma empresa com o mesmo ID
-            var existingCompany = await dbContext.Companies.FindAsync(company.Id);
-            if (existingCompany != null)
+            var existingEmpresa = await dbContext.Companies.FindAsync(Empresa.Id);
+            if (existingEmpresa != null)
             {
-                throw new ArgumentException($"A company with ID {company.Id} already exists.");
+                throw new ArgumentException($"A Empresa with ID {Empresa.Id} already exists.");
             }
 
-            if (company.Status != "ATIVO" && company.Status != "INATIVO")
+            if (Empresa.Status != "ATIVO" && Empresa.Status != "INATIVO")
             {
-                throw new ArgumentException($"A company status can be 'INATIVO' or 'ATIVO'.");
+                throw new ArgumentException($"A Empresa status can be 'INATIVO' or 'ATIVO'.");
             }
 
-            company.DateIngestion = DateTime.UtcNow;
-            company.LastUpdate = DateTime.UtcNow;
-            dbContext.Companies.Add(company);
+            Empresa.DateIngestion = DateTime.UtcNow;
+            Empresa.LastUpdate = DateTime.UtcNow;
+            dbContext.Companies.Add(Empresa);
             await dbContext.SaveChangesAsync();
 
             // Registro de log
-            await _logService.CreateLogAsync(new Log { Message = $"Company {company.Id} created" });
+            await _logService.CreateLogAsync(new Log { Message = $"Empresa {Empresa.Id} created" });
 
-            return company;
+            return Empresa;
         }
 
-        public async Task<Company> UpdateCompanyAsync(int id, Company companyIn)
+        public async Task<Empresa> UpdateEmpresaAsync(int id, Empresa EmpresaIn)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var companyToUpdate = await dbContext.Companies.FindAsync(id);
+            var EmpresaToUpdate = await dbContext.Companies.FindAsync(id);
 
-            if (companyToUpdate == null)
+            if (EmpresaToUpdate == null)
             {
-                throw new Exception("Company not found");
+                throw new Exception("Empresa não encontrado(a)");
             }
 
-            companyToUpdate.Name = companyIn.Name;
-            companyToUpdate.Status = companyIn.Status;
-            companyToUpdate.LastUpdate = DateTime.UtcNow;
-            companyToUpdate.Costs = companyIn.Costs;
+            EmpresaToUpdate.Name = EmpresaIn.Name;
+            EmpresaToUpdate.Status = EmpresaIn.Status;
+            EmpresaToUpdate.LastUpdate = DateTime.UtcNow;
+            EmpresaToUpdate.Custos = EmpresaIn.Custos;
 
             await dbContext.SaveChangesAsync();
 
             // Registro de log
-            await _logService.CreateLogAsync(new Log { Message = $"Company {companyToUpdate.Id} updated" });
+            await _logService.CreateLogAsync(new Log { Message = $"Empresa {EmpresaToUpdate.Id} updated" });
 
-            return companyToUpdate;
+            return EmpresaToUpdate;
         }
 
-        public async Task RemoveCompanyAsync(int id)
+        public async Task RemoveEmpresaAsync(int id)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var companyToRemove = await dbContext.Companies.FindAsync(id);
+            var EmpresaToRemove = await dbContext.Companies.FindAsync(id);
 
-            if (companyToRemove == null)
+            if (EmpresaToRemove == null)
             {
-                throw new Exception("Company not found");
+                throw new Exception("Empresa não encontrado(a)");
             }
 
-            dbContext.Companies.Remove(companyToRemove);
+            dbContext.Companies.Remove(EmpresaToRemove);
             await dbContext.SaveChangesAsync();
 
             // Registro de log
-            await _logService.CreateLogAsync(new Log { Message = $"Company {companyToRemove.Id} removed" });
+            await _logService.CreateLogAsync(new Log { Message = $"Empresa {EmpresaToRemove.Id} removed" });
         }
     }
 }

@@ -1,5 +1,5 @@
-using IteraCompanyGroups.Data;
-using IteraCompanyGroups.Models;
+using IteraEmpresaGrupos.Data;
+using IteraEmpresaGrupos.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,124 +8,124 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IteraCompanyGroups.Services
+namespace IteraEmpresaGrupos.Services
 {
-    public class CostService
+    public class CustoService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly LogService _logService;
+        private readonly IteraLogService _logService;
 
-        public CostService(IServiceScopeFactory serviceScopeFactory, LogService logService)
+        public CustoService(IServiceScopeFactory serviceScopeFactory, IteraLogService logService)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _logService = logService;
         }
 
-        public async Task<List<Cost>> GetCostsAsync()
+        public async Task<List<Custo>> GetCustosAsync()
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            return await dbContext.Costs.ToListAsync();
+            return await dbContext.Custos.ToListAsync();
         }
 
-        public async Task<Cost> GetCostByIdAsync(int id)
+        public async Task<Custo> GetCustoByIdAsync(int id)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            return await dbContext.Costs.FirstOrDefaultAsync(c => c.Id == id);
+            return await dbContext.Custos.FirstOrDefaultAsync(c => c.Id == id);
         }
 
 
-        public async Task<ActionResult<Cost>> CreateCostAsync(Cost cost)
+        public async Task<ActionResult<Custo>> CreateCustoAsync(Custo Custo)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            // Verificar se já existe um cost com o mesmo CompanyId e Date
-            var existingCost = await dbContext.Costs.FirstOrDefaultAsync(c => c.CompanyId == cost.CompanyId);
-            if (existingCost != null)
+            // Verificar se já existe um Custo com o mesmo EmpresaId e Date
+            var existingCusto = await dbContext.Custos.FirstOrDefaultAsync(c => c.EmpresaId == Custo.EmpresaId);
+            if (existingCusto != null)
             {
-                throw new ArgumentException($"A cost with ID {cost.Id} already exists.");
+                throw new ArgumentException($"A Custo with ID {Custo.Id} already exists.");
             }
 
-            cost.LastUpdate = DateTime.UtcNow;
-            dbContext.Costs.Add(cost);
+            Custo.LastUpdate = DateTime.UtcNow;
+            dbContext.Custos.Add(Custo);
             await dbContext.SaveChangesAsync();
 
             // Registro de log
-            await _logService.CreateLogAsync(new Log { Message = $"Cost {cost.Id} created" });
+            await _logService.CreateLogAsync(new Log { Message = $"Custo {Custo.Id} created" });
 
-            return cost;
+            return Custo;
         }
 
-        public async Task<Cost> GetCostByTypeAndYearAsync(int companyId, string idType, string year)
+        public async Task<Custo> GetCustoByTypeAndYearAsync(int EmpresaId, string idType, string year)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            return await dbContext.Costs.FirstOrDefaultAsync(c => c.CompanyId == companyId && c.IdType == idType && c.Ano == year);
+            return await dbContext.Custos.FirstOrDefaultAsync(c => c.EmpresaId == EmpresaId && c.IdType == idType && c.Ano == year);
         }
 
 
 
-        public async Task<Cost> UpdateCostAsync(int id, Cost CostIn)
+        public async Task<Custo> UpdateCustoAsync(int id, Custo CustoIn)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var costToUpdate = await dbContext.Costs.FindAsync(id);
+            var CustoToUpdate = await dbContext.Custos.FindAsync(id);
 
-            if (costToUpdate == null)
+            if (CustoToUpdate == null)
             {
-                throw new Exception("Cost not found");
+                throw new Exception("Custo não encontrado(a)");
             }
 
             // Verificar se os valores foram atualizados
             bool valuesUpdated = false;
-            if (costToUpdate.Value != CostIn.Value)
+            if (CustoToUpdate.Value != CustoIn.Value)
             {
-                costToUpdate.Value = CostIn.Value;
+                CustoToUpdate.Value = CustoIn.Value;
                 valuesUpdated = true;
             }
-            if (costToUpdate.IdType != CostIn.IdType)
+            if (CustoToUpdate.IdType != CustoIn.IdType)
             {
-                costToUpdate.IdType = CostIn.IdType;
+                CustoToUpdate.IdType = CustoIn.IdType;
                 valuesUpdated = true;
             }
-            if (costToUpdate.Ano != CostIn.Ano)
+            if (CustoToUpdate.Ano != CustoIn.Ano)
             {
-                costToUpdate.Ano = CostIn.Ano;
+                CustoToUpdate.Ano = CustoIn.Ano;
                 valuesUpdated = true;
             }
 
             if (valuesUpdated)
             {
-                costToUpdate.LastUpdate = DateTime.UtcNow;
+                CustoToUpdate.LastUpdate = DateTime.UtcNow;
                 await dbContext.SaveChangesAsync();
 
                 // Registro de log
-                await _logService.CreateLogAsync(new Log { Message = $"Cost {id} updated" });
+                await _logService.CreateLogAsync(new Log { Message = $"Custo {id} updated" });
             }
 
-            return costToUpdate;
+            return CustoToUpdate;
         }
 
-        public async Task RemoveCostAsync(int id)
+        public async Task RemoveCustoAsync(int id)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var costToRemove = await dbContext.Costs.FindAsync(id);
+            var CustoToRemove = await dbContext.Custos.FindAsync(id);
 
-            if (costToRemove == null)
+            if (CustoToRemove == null)
             {
-                throw new Exception("Cost not found");
+                throw new Exception("Custo não encontrado(a)");
             }
 
-            dbContext.Costs.Remove(costToRemove);
+            dbContext.Custos.Remove(CustoToRemove);
             await dbContext.SaveChangesAsync();
 
             // Registro de log
-            await _logService.CreateLogAsync(new Log { Message = $"Cost {id} removed" });
+            await _logService.CreateLogAsync(new Log { Message = $"Custo {id} removed" });
         }
     }
 

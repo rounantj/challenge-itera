@@ -1,30 +1,32 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using IteraCompanyGroups.Services;
-using IteraCompanyGroups.Models;
+using IteraEmpresaGrupos.Services;
+using IteraEmpresaGrupos.Models;
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 
-namespace IteraCompanyGroups.Controllers
+namespace IteraEmpresaGrupos.Controllers
 {
     [ApiController]
-    [Route("grupo")]
-    public class GroupController : ControllerBase
+    [Authorize]
+    [Route("[Controller]")]
+    public class GrupoController : ControllerBase
     {
-        private readonly IGroupService _groupService;
+        private readonly IGrupoService _GrupoService;
 
-        public GroupController(IGroupService groupService)
+        public GrupoController(IGrupoService GrupoService)
         {
-            _groupService = groupService;
+            _GrupoService = GrupoService;
         }
 
 
         // Endpoints específicos do desafio
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Group>>> GetGroupsByDate([FromQuery] string date)
+        public async Task<ActionResult<IEnumerable<Grupo>>> GetGruposByDate([FromQuery] string date)
         {
             DateTime parsedDate;
             if (!DateTime.TryParse(date, out parsedDate))
@@ -32,32 +34,32 @@ namespace IteraCompanyGroups.Controllers
                 return BadRequest();
             }
 
-            var groups = await _groupService.GetGroupsByDateAsync(parsedDate);
+            var Grupos = await _GrupoService.GetGruposByDateAsync(parsedDate);
 
-            if (groups == null || groups.Count() == 0)
+            if (Grupos == null || Grupos.Count() == 0)
             {
                 return NotFound();
             }
 
-            return Ok(groups);
+            return Ok(Grupos);
         }
 
 
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult> GetCostsByGroupIdAsync(int id)
+        public async Task<ActionResult> GetCustosByGrupoIdAsync(int id)
         {
-            var group = await _groupService.GetGroupByIdAsync(id);
-            if (group == null)
+            var Grupo = await _GrupoService.GetGrupoByIdAsync(id);
+            if (Grupo == null)
             {
-                return NotFound("Group not found");
+                return NotFound("Grupo não encontrado(a)");
             }
 
             try
             {
-                var costs = await _groupService.GetCostsByGroupIdAsync(id);
-                return Ok(costs);
+                var Custos = await _GrupoService.GetCustosByGrupoIdAsync(id);
+                return Ok(Custos);
             }
             catch (Exception ex)
             {
@@ -66,22 +68,22 @@ namespace IteraCompanyGroups.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Group>> CreateGroup([FromBody] GroupRequest groupRequest)
+        public async Task<ActionResult<Grupo>> CreateGrupo([FromBody] GrupoRequest GrupoRequest)
         {
-            // Converter GroupRequest em Group
-            var group = new Group
+
+            var Grupo = new Grupo
             {
-                Name = groupRequest.Name,
-                Id = groupRequest.Id,
-                Category = groupRequest.Category,
-                DateIngestion = groupRequest.DateIngestion,
-                LastUpdate = groupRequest.LastUpdate,
+                Name = GrupoRequest.Name,
+                Id = GrupoRequest.Id,
+                Category = GrupoRequest.Category,
+                DateIngestion = GrupoRequest.DateIngestion,
+                LastUpdate = GrupoRequest.LastUpdate,
             };
 
             try
             {
-                var createdGroup = await _groupService.CreateGroupAsync(group);
-                return CreatedAtAction(nameof(_groupService.GetGroupByIdAsync), new { id = createdGroup.Id }, createdGroup);
+                var createdGrupo = await _GrupoService.CreateGrupoAsync(Grupo);
+                return createdGrupo;
             }
             catch (ArgumentException ex)
             {
@@ -91,45 +93,45 @@ namespace IteraCompanyGroups.Controllers
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateGroup(int id, [FromBody] GroupRequest groupRequest)
+        public async Task<IActionResult> UpdateGrupo(int id, [FromBody] GrupoRequest GrupoRequest)
         {
-            if (id != groupRequest.Id)
+            if (id != GrupoRequest.Id)
             {
                 return BadRequest();
             }
 
-            var existingGroup = await _groupService.GetGroupByIdAsync(id);
-            if (existingGroup == null)
+            var existingGrupo = await _GrupoService.GetGrupoByIdAsync(id);
+            if (existingGrupo == null)
             {
                 return NotFound();
             }
 
-            // Converter GroupRequest em Group
-            var group = new Group
+
+            var Grupo = new Grupo
             {
-                Id = groupRequest.Id,
-                Name = groupRequest.Name,
-                Category = groupRequest.Category,
-                DateIngestion = groupRequest.DateIngestion,
-                LastUpdate = groupRequest.LastUpdate,
+                Id = GrupoRequest.Id,
+                Name = GrupoRequest.Name,
+                Category = GrupoRequest.Category,
+                DateIngestion = GrupoRequest.DateIngestion,
+                LastUpdate = GrupoRequest.LastUpdate,
             };
 
-            await _groupService.UpdateGroupAsync(group);
+            await _GrupoService.UpdateGrupoAsync(Grupo);
 
             return NoContent();
         }
 
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteGroup(int id)
+        public async Task<IActionResult> DeleteGrupo(int id)
         {
-            var existingGroup = await _groupService.GetGroupByIdAsync(id);
-            if (existingGroup == null)
+            var existingGrupo = await _GrupoService.GetGrupoByIdAsync(id);
+            if (existingGrupo == null)
             {
                 return NotFound();
             }
 
-            await _groupService.DeleteGroupAsync(id);
+            await _GrupoService.DeleteGrupoAsync(id);
 
             return NoContent();
         }

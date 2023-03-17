@@ -1,20 +1,18 @@
-using IteraCompanyGroups.Data;
-using IteraCompanyGroups.Models;
-using Microsoft.AspNetCore.Mvc;
+using IteraEmpresaGrupos.Data;
+using IteraEmpresaGrupos.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
-namespace IteraCompanyGroups.Services
+namespace IteraEmpresaGrupos.Services
 {
-    public class LogService
+    public class IteraLogService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        public LogService(IServiceScopeFactory serviceScopeFactory)
+        public IteraLogService(IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
         }
@@ -46,6 +44,8 @@ namespace IteraCompanyGroups.Services
             return log;
         }
 
+
+
         public async Task<Log> UpdateLogAsync(int id, Log logIn)
         {
             using var scope = _serviceScopeFactory.CreateScope();
@@ -55,7 +55,7 @@ namespace IteraCompanyGroups.Services
 
             if (logToUpdate == null)
             {
-                throw new Exception("Log not found");
+                throw new Exception("Log não encontrado(a)");
             }
 
             logToUpdate.Message = logIn.Message;
@@ -75,7 +75,7 @@ namespace IteraCompanyGroups.Services
 
             if (logToRemove == null)
             {
-                throw new Exception("Log not found");
+                throw new Exception("Log não encontrado(a)");
             }
 
             dbContext.Logs.Remove(logToRemove);

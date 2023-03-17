@@ -1,18 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using IteraCompanyGroups.Models;
+using IteraEmpresaGrupos.Models;
+using IteraEmpresaGrupos.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace IteraCompanyGroups.Controllers
+namespace IteraEmpresaGrupos.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class LogsController : ControllerBase
     {
-        private readonly ILogService _logService;
+        private readonly IteraLogService _logService;
 
-        public LogsController(ILogService logService)
+        public LogsController(IteraLogService logService)
         {
             _logService = logService;
         }
@@ -20,60 +23,38 @@ namespace IteraCompanyGroups.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Log>>> Get()
         {
-            return await _logService.GetLogsAsync();
+            try
+            {
+                var logs = await _logService.GetLogsAsync();
+                return Ok(logs);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, $"Internal server error: {e.Message}");
+            }
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Log>> Get(int id)
         {
-            var log = await _logService.GetLogByIdAsync(id);
-            if (log == null)
-            {
-                return NotFound();
-            }
-
-            return log;
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<Log>> Post(Log log)
-        {
-            await _logService.CreateLogAsync(log);
-            return CreatedAtAction(nameof(Get), new { id = log.Id }, log);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, Log log)
-        {
             try
             {
-                await _logService.UpdateLogAsync(id, log);
+                var log = await _logService.GetLogByIdAsync(id);
+                if (log == null)
+                {
+                    return NotFound();
+                }
+                return Ok(log);
             }
-            catch (ArgumentException e)
+            catch (Exception e)
             {
-                return NotFound(e.Message);
+                return StatusCode(500, $"Internal server error: {e.Message}");
             }
-
-            return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
-                await _logService.DeleteLogAsync(id);
-            }
-            catch (ArgumentException e)
-            {
-                return NotFound(e.Message);
-            }
-
-            return NoContent();
-        }
     }
 
-    public interface ILogService
+    public interface LogService
     {
         Task<List<Log>> GetLogsAsync();
         Task<Log> GetLogByIdAsync(int id);

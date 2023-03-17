@@ -4,25 +4,25 @@ using System.Text.Json.Serialization;
 using System.Collections.Generic;
 
 
-namespace IteraCompanyGroups.Models
+namespace IteraEmpresaGrupos.Models
 {
-    public class Company
+    public class Empresa
     {
         public int? Id { get; set; }
         public string Name { get; set; }
         public string Status { get; set; }
         public DateTime? DateIngestion { get; set; }
         public DateTime? LastUpdate { get; set; }
-        public ICollection<Cost> Costs { get; set; }
+        public ICollection<Custo> Custos { get; set; }
     }
 
-    public class CompanyRequest
+    public class EmpresaRequest
     {
         [JsonPropertyName("id")]
         public int Id { get; set; }
 
-        [JsonPropertyName("group_id")]
-        public int GroupId { get; set; }
+        [JsonPropertyName("Grupo_id")]
+        public int GrupoId { get; set; }
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }

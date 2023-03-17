@@ -1,11 +1,11 @@
-using IteraCompanyGroups.Data;
-using IteraCompanyGroups.Models;
+using IteraEmpresaGrupos.Data;
+using IteraEmpresaGrupos.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace IteraCompanyGroups.Seeder
+namespace IteraEmpresaGrupos.Seeder
 {
     public static class SeederClass
     {
@@ -18,41 +18,41 @@ namespace IteraCompanyGroups.Seeder
             context.Companies.AddRange(companies);
             context.SaveChanges();
 
-            var groups = SeedGroups(companies);
-            context.Groups.AddRange(groups);
+            var Grupos = SeedGrupos(companies);
+            context.Grupos.AddRange(Grupos);
             context.SaveChanges();
 
-            var costs = SeedCosts(companies, context);
-            context.Costs.AddRange(costs);
+            var Custos = SeedCustos(companies, context);
+            context.Custos.AddRange(Custos);
             context.SaveChanges();
         }
 
-        private static List<Company> SeedCompanies()
+        private static List<Empresa> SeedCompanies()
         {
-            var companies = new List<Company>
+            var companies = new List<Empresa>
             {
-                new Company
+                new Empresa
                 {
                     Name = "Empresa A",
                     Status = "ATIVO",
                     DateIngestion = new DateTime(2022, 8, 25, 8, 52, 0),
                     LastUpdate = new DateTime(2022, 8, 25, 8, 52, 0)
                 },
-                new Company
+                new Empresa
                 {
                     Name = "Empresa B",
                     Status = "ATIVO",
                     DateIngestion = new DateTime(2022, 8, 25, 8, 52, 0),
                     LastUpdate = new DateTime(2022, 8, 25, 8, 52, 0)
                 },
-                new Company
+                new Empresa
                 {
                     Name = "Empresa C",
                     Status = "INATIVO",
                     DateIngestion = new DateTime(2022, 8, 25, 8, 52, 0),
                     LastUpdate = new DateTime(2022, 8, 25, 8, 52, 0)
                 },
-                new Company
+                new Empresa
                 {
                     Name = "Empresa D",
                     Status = "ATIVO",
@@ -64,37 +64,37 @@ namespace IteraCompanyGroups.Seeder
             return companies;
         }
 
-        private static List<Group> SeedGroups(List<Company> companies)
+        private static List<Grupo> SeedGrupos(List<Empresa> companies)
         {
-            var groups = new List<Group>
+            var Grupos = new List<Grupo>
             {
-                new Group
+                new Grupo
                 {
                     Name = "Grupo A",
                     Category = "Categoria X",
                     DateIngestion = new DateTime(2022, 8, 25, 8, 52, 0),
                     LastUpdate = new DateTime(2022, 8, 25, 8, 52, 0),
-                    Companys = companies.Take(2).ToList()
+                    Empresas = companies.Take(2).ToList()
                 },
-                new Group
+                new Grupo
                 {
                     Name = "Grupo B",
                     Category = "Categoria Y",
                     DateIngestion = new DateTime(2022, 8, 25, 8, 52, 0),
                     LastUpdate = new DateTime(2022, 8, 25, 8, 52, 0),
-                    Companys = companies.Skip(2).ToList()
+                    Empresas = companies.Skip(2).ToList()
                 }
             };
 
-            return groups;
+            return Grupos;
         }
 
-        private static List<Cost> SeedCosts(List<Company> companies, AppDbContext context)
+        private static List<Custo> SeedCustos(List<Empresa> companies, AppDbContext context)
         {
             var random = new Random();
-            var costs = new List<Cost>();
+            var Custos = new List<Custo>();
 
-            foreach (var company in companies)
+            foreach (var Empresa in companies)
             {
                 for (int year = 2018; year <= 2020; year++)
                 {
@@ -103,34 +103,34 @@ namespace IteraCompanyGroups.Seeder
                     {
                         for (int day = 1; day <= 28; day++)
                         {
-                            var cost = new Cost
+                            var Custo = new Custo
                             {
                                 Id = id++,
                                 Value = (float)(random.Next(100, 1000) * 1.1),
                                 LastUpdate = new DateTime(year, month, day),
-                                CompanyId = (int)company.Id,
+                                EmpresaId = (int)Empresa.Id,
                                 Ano = year.ToString(),
                                 IdType = "tipo_" + id
                             };
 
-                            // Check if a Cost object with the same key value is already being tracked
-                            var existingCost = context.Costs.Local.FirstOrDefault(c => c.Id == cost.Id);
-                            if (existingCost != null)
+
+                            var existingCusto = context.Custos.Local.FirstOrDefault(c => c.Id == Custo.Id);
+                            if (existingCusto != null)
                             {
-                                // Detach the existing Cost object so a new one with the same key value can be attached
-                                context.Entry(existingCost).State = EntityState.Detached;
+
+                                context.Entry(existingCusto).State = EntityState.Detached;
                             }
 
-                            // Attach the new Cost object
-                            context.Costs.Attach(cost);
-                            context.Entry(cost).State = EntityState.Added;
+
+                            context.Custos.Attach(Custo);
+                            context.Entry(Custo).State = EntityState.Added;
                         }
                     }
                 }
             }
 
 
-            return costs;
+            return Custos;
         }
     }
 }

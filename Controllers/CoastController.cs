@@ -1,62 +1,63 @@
-using IteraCompanyGroups.Models;
-using IteraCompanyGroups.Services;
+using IteraEmpresaGrupos.Models;
+using IteraEmpresaGrupos.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IteraCompanyGroups.Controllers
+namespace IteraEmpresaGrupos.Controllers
 {
     [ApiController]
-    [Route("grupo/custos")]
-    public class CostController : ControllerBase
+    [Authorize]
+    [Route("Grupo/[controller]")]
+    public class CustoController : ControllerBase
     {
-        private readonly CompanyService _companyService;
-        private readonly CostService _CostService;
+        private readonly EmpresaService _EmpresaService;
+        private readonly CustoService _CustoService;
 
-        public CostController(CompanyService companyService, CostService CostService)
+        public CustoController(EmpresaService EmpresaService, CustoService CustoService)
         {
-            _companyService = companyService;
-            _CostService = CostService;
+            _EmpresaService = EmpresaService;
+            _CustoService = CustoService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IQueryable<Cost>>> Get() =>
-            Ok(await _CostService.GetCostsAsync());
+        public async Task<ActionResult<IQueryable<Custo>>> Get() =>
+            Ok(await _CustoService.GetCustosAsync());
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Cost>> Get(int id)
+        public async Task<ActionResult<Custo>> Get(int id)
         {
-            var Cost = await _CostService.GetCostByIdAsync(id);
+            var Custo = await _CustoService.GetCustoByIdAsync(id);
 
-            return Cost is not null ? Ok(Cost) : NotFound();
+            return Custo is not null ? Ok(Custo) : NotFound();
         }
 
         [HttpPost]
-        public async Task<ActionResult<Cost>> Create(CostRequest CostRequest)
+        public async Task<ActionResult<Custo>> Create(CustoRequest CustoRequest)
         {
 
             try
             {
-                var company = await _companyService.GetCompanyByIdAsync(CostRequest.CompanyId);
-                if (company == null)
+                var Empresa = await _EmpresaService.GetEmpresaByIdAsync(CustoRequest.EmpresaId);
+                if (Empresa == null)
                 {
-                    return NotFound("Company not found");
+                    return NotFound("Empresa não encontrado(a)");
                 }
 
-                var Cost = new Cost
+                var Custo = new Custo
                 {
-                    Id = CostRequest.Id,
-                    IdType = CostRequest.IdType,
-                    Ano = CostRequest.Ano,
-                    Value = (float)CostRequest.Value,
-                    CompanyId = CostRequest.CompanyId
+                    Id = CustoRequest.Id,
+                    IdType = CustoRequest.IdType,
+                    Ano = CustoRequest.Ano,
+                    Value = (float)CustoRequest.Value,
+                    EmpresaId = CustoRequest.EmpresaId
                 };
 
-                var newCost = await _CostService.CreateCostAsync(Cost);
+                var newCusto = await _CustoService.CreateCustoAsync(Custo);
 
-                return CreatedAtAction(nameof(Get), new { id = Cost.Id }, newCost);
+                return CreatedAtAction(nameof(Get), new { id = Custo.Id }, newCusto);
             }
             catch (ArgumentException ex)
             {
@@ -66,32 +67,32 @@ namespace IteraCompanyGroups.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCost(int id, CostRequest costRequest)
+        public async Task<IActionResult> UpdateCusto(int id, CustoRequest CustoRequest)
         {
             try
             {
-                var company = await _companyService.GetCompanyByIdAsync(id);
-                if (company == null)
+                var Empresa = await _EmpresaService.GetEmpresaByIdAsync(id);
+                if (Empresa == null)
                 {
-                    return BadRequest("Company not found");
+                    return BadRequest("Empresa não encontrado(a)");
                 }
 
-                var existingCost = await _CostService.GetCostByTypeAndYearAsync(id, costRequest.IdType, costRequest.Ano);
-                if (existingCost != null)
+                var existingCusto = await _CustoService.GetCustoByTypeAndYearAsync(id, CustoRequest.IdType, CustoRequest.Ano);
+                if (existingCusto != null)
                 {
-                    existingCost.Value = costRequest.Value;
-                    await _CostService.UpdateCostAsync(existingCost.Id, existingCost);
+                    existingCusto.Value = CustoRequest.Value;
+                    await _CustoService.UpdateCustoAsync(existingCusto.Id, existingCusto);
                 }
                 else
                 {
-                    var newCost = new Cost
+                    var newCusto = new Custo
                     {
-                        IdType = costRequest.IdType,
-                        Ano = costRequest.Ano,
-                        Value = costRequest.Value,
-                        CompanyId = id
+                        IdType = CustoRequest.IdType,
+                        Ano = CustoRequest.Ano,
+                        Value = CustoRequest.Value,
+                        EmpresaId = id
                     };
-                    await _CostService.CreateCostAsync(newCost);
+                    await _CustoService.CreateCustoAsync(newCusto);
                 }
 
                 return Ok(); // resposta 200
@@ -106,14 +107,14 @@ namespace IteraCompanyGroups.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var Cost = await _CostService.GetCostByIdAsync(id);
+            var Custo = await _CustoService.GetCustoByIdAsync(id);
 
-            if (Cost == null)
+            if (Custo == null)
             {
                 return NotFound();
             }
 
-            await _CostService.RemoveCostAsync(id);
+            await _CustoService.RemoveCustoAsync(id);
 
             return NoContent();
         }

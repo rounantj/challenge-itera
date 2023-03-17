@@ -1,31 +1,25 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Serialization;
+using System;
 using System.Text;
-using IteraCompanyGroups.Services;
-using IteraCompanyGroups.Data;
-using Microsoft.EntityFrameworkCore;
-using IteraCompanyGroups.Seeder;
-using MongoDB.Driver;
-using Elasticsearch.Net;
+using IteraEmpresaGrupos.Data;
+using IteraEmpresaGrupos.Seeder;
+using IteraEmpresaGrupos.Services;
 using Nest;
+using Elasticsearch.Net;
 
-namespace IteraCompanyGroups
+namespace IteraEmpresaGrupos
 {
     public class Startup
     {
@@ -36,20 +30,19 @@ namespace IteraCompanyGroups
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers()
-             .AddNewtonsoftJson(options =>
-             {
-                 options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver
-                 {
-                     NamingStrategy = new Newtonsoft.Json.Serialization.SnakeCaseNamingStrategy()
-                 };
-             });
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new SnakeCaseNamingStrategy()
+                    };
+                });
+
 
             var key = Encoding.ASCII.GetBytes(Configuration.GetValue<string>("JwtKey"));
-
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -71,30 +64,54 @@ namespace IteraCompanyGroups
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = Configuration.GetValue<string>("TitleProject"), Version = "v1" });
-            });
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
+                });
 
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+            });
 
             var connectionString = Configuration.GetValue<string>("ConnectionStrings:MySqlConnection");
             services.AddDbContext<AppDbContext>(options => options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 26))));
-
-            // Adicione o contexto do banco de dados como um serviço
             services.AddScoped<AppDbContext>();
-            // Registrar serviços
-            services.AddScoped<IGroupService, GroupService>();
-            services.AddScoped<CompanyService>();
-            services.AddScoped<CostService>();
-            services.AddScoped<LogService>();
+
+
+            services.AddScoped<IGrupoService, GrupoService>();
+            services.AddScoped<EmpresaService>();
+            services.AddScoped<CustoService>();
+            services.AddScoped<IteraLogService>();
             services.AddScoped<UserService>();
             services.AddScoped<TokenService>();
+
+
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AppDbContext context, CompanyService companyService)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AppDbContext context, EmpresaService EmpresaService)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "IteraCompanyGroups v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "IteraEmpresaGrupos v1"));
             }
 
             app.UseHttpsRedirection();
@@ -110,11 +127,11 @@ namespace IteraCompanyGroups
                 endpoints.MapControllers();
             });
 
-            // Inicialização do banco de dados
+
             context.Database.EnsureCreatedAsync().GetAwaiter().GetResult();
             context.Database.Migrate();
 
-            // Chamando o seeder
+
             SeederClass.Seed(context);
         }
 
