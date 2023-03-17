@@ -94,18 +94,18 @@ namespace IteraEmpresaGrupos.Services
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var EmpresaToRemove = await dbContext.Companies.FindAsync(id);
+            var empresaToInativar = await dbContext.Companies.FindAsync(id);
 
-            if (EmpresaToRemove == null)
+            if (empresaToInativar == null)
             {
                 throw new Exception("Empresa não encontrado(a)");
             }
 
-            dbContext.Companies.Remove(EmpresaToRemove);
+            empresaToInativar.Status = "INATIVO";
             await dbContext.SaveChangesAsync();
 
             // Registro de log
-            await _logService.CreateLogAsync(new Log { Message = $"Empresa {EmpresaToRemove.Id} removed" });
+            await _logService.CreateLogAsync(new Log { Message = $"Empresa {id} inativada" });
         }
     }
 }
