@@ -14,6 +14,8 @@ namespace IteraCompanyGroups.Data
         public DbSet<Company> Companies { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<Cost> Costs { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Log> Logs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

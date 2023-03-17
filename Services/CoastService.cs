@@ -13,10 +13,12 @@ namespace IteraCompanyGroups.Services
     public class CostService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly LogService _logService;
 
-        public CostService(IServiceScopeFactory serviceScopeFactory)
+        public CostService(IServiceScopeFactory serviceScopeFactory, LogService logService)
         {
             _serviceScopeFactory = serviceScopeFactory;
+            _logService = logService;
         }
 
         public async Task<List<Cost>> GetCostsAsync()
@@ -49,6 +51,10 @@ namespace IteraCompanyGroups.Services
             cost.LastUpdate = DateTime.UtcNow;
             dbContext.Costs.Add(cost);
             await dbContext.SaveChangesAsync();
+
+            // Registro de log
+            await _logService.CreateLogAsync(new Log { Message = $"Cost {cost.Id} created" });
+
             return cost;
         }
 
@@ -66,21 +72,41 @@ namespace IteraCompanyGroups.Services
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var CostToUpdate = await dbContext.Costs.FindAsync(id);
+            var costToUpdate = await dbContext.Costs.FindAsync(id);
 
-            if (CostToUpdate == null)
+            if (costToUpdate == null)
             {
                 throw new Exception("Cost not found");
             }
 
-            CostToUpdate.Ano = CostIn.Ano;
-            CostToUpdate.IdType = CostIn.IdType;
-            CostToUpdate.Value = CostIn.Value;
-            CostToUpdate.LastUpdate = DateTime.UtcNow;
+            // Verificar se os valores foram atualizados
+            bool valuesUpdated = false;
+            if (costToUpdate.Value != CostIn.Value)
+            {
+                costToUpdate.Value = CostIn.Value;
+                valuesUpdated = true;
+            }
+            if (costToUpdate.IdType != CostIn.IdType)
+            {
+                costToUpdate.IdType = CostIn.IdType;
+                valuesUpdated = true;
+            }
+            if (costToUpdate.Ano != CostIn.Ano)
+            {
+                costToUpdate.Ano = CostIn.Ano;
+                valuesUpdated = true;
+            }
 
-            await dbContext.SaveChangesAsync();
+            if (valuesUpdated)
+            {
+                costToUpdate.LastUpdate = DateTime.UtcNow;
+                await dbContext.SaveChangesAsync();
 
-            return CostToUpdate;
+                // Registro de log
+                await _logService.CreateLogAsync(new Log { Message = $"Cost {id} updated" });
+            }
+
+            return costToUpdate;
         }
 
         public async Task RemoveCostAsync(int id)
@@ -88,15 +114,19 @@ namespace IteraCompanyGroups.Services
             using var scope = _serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var CostToRemove = await dbContext.Costs.FindAsync(id);
+            var costToRemove = await dbContext.Costs.FindAsync(id);
 
-            if (CostToRemove == null)
+            if (costToRemove == null)
             {
                 throw new Exception("Cost not found");
             }
 
-            dbContext.Costs.Remove(CostToRemove);
+            dbContext.Costs.Remove(costToRemove);
             await dbContext.SaveChangesAsync();
+
+            // Registro de log
+            await _logService.CreateLogAsync(new Log { Message = $"Cost {id} removed" });
         }
     }
+
 }

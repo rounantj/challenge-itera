@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace IteraCompanyGroups.Controllers
 {
     [ApiController]
-    [Route("api/Company/[controller]")]
+    [Route("grupo/custos")]
     public class CostController : ControllerBase
     {
         private readonly CompanyService _companyService;

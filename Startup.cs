@@ -14,9 +14,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 
-
-
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -24,6 +21,9 @@ using IteraCompanyGroups.Services;
 using IteraCompanyGroups.Data;
 using Microsoft.EntityFrameworkCore;
 using IteraCompanyGroups.Seeder;
+using MongoDB.Driver;
+using Elasticsearch.Net;
+using Nest;
 
 namespace IteraCompanyGroups
 {
@@ -39,7 +39,6 @@ namespace IteraCompanyGroups
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllers()
              .AddNewtonsoftJson(options =>
              {
@@ -48,6 +47,7 @@ namespace IteraCompanyGroups
                      NamingStrategy = new Newtonsoft.Json.Serialization.SnakeCaseNamingStrategy()
                  };
              });
+
             var key = Encoding.ASCII.GetBytes(Configuration.GetValue<string>("JwtKey"));
 
             services.AddAuthentication(options =>
@@ -67,22 +67,27 @@ namespace IteraCompanyGroups
                     ValidateAudience = false
                 };
             });
+
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Itera Challenge - Groups, Companys and Costs", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = Configuration.GetValue<string>("TitleProject"), Version = "v1" });
             });
 
-            services.AddDbContext<AppDbContext>(options => options.UseMySql("server=localhost;database=itera;user=root;password=;", new MySqlServerVersion(new Version(8, 0, 26))));
 
+            var connectionString = Configuration.GetValue<string>("ConnectionStrings:MySqlConnection");
+            services.AddDbContext<AppDbContext>(options => options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 26))));
+
+            // Adicione o contexto do banco de dados como um serviço
+            services.AddScoped<AppDbContext>();
             // Registrar serviços
             services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<CompanyService>();
             services.AddScoped<CostService>();
-
-
+            services.AddScoped<LogService>();
+            services.AddScoped<UserService>();
+            services.AddScoped<TokenService>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AppDbContext context, CompanyService companyService)
         {
             if (env.IsDevelopment())
@@ -106,11 +111,12 @@ namespace IteraCompanyGroups
             });
 
             // Inicialização do banco de dados
-            context.Database.EnsureCreated();
+            context.Database.EnsureCreatedAsync().GetAwaiter().GetResult();
             context.Database.Migrate();
 
             // Chamando o seeder
             SeederClass.Seed(context);
         }
+
     }
 }

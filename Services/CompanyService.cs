@@ -12,10 +12,12 @@ namespace IteraCompanyGroups.Services
     public class CompanyService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly LogService _logService;
 
-        public CompanyService(IServiceScopeFactory serviceScopeFactory)
+        public CompanyService(IServiceScopeFactory serviceScopeFactory, LogService logService)
         {
             _serviceScopeFactory = serviceScopeFactory;
+            _logService = logService;
         }
 
         public async Task<List<Company>> GetCompaniesAsync()
@@ -56,6 +58,9 @@ namespace IteraCompanyGroups.Services
             dbContext.Companies.Add(company);
             await dbContext.SaveChangesAsync();
 
+            // Registro de log
+            await _logService.CreateLogAsync(new Log { Message = $"Company {company.Id} created" });
+
             return company;
         }
 
@@ -78,6 +83,9 @@ namespace IteraCompanyGroups.Services
 
             await dbContext.SaveChangesAsync();
 
+            // Registro de log
+            await _logService.CreateLogAsync(new Log { Message = $"Company {companyToUpdate.Id} updated" });
+
             return companyToUpdate;
         }
 
@@ -95,6 +103,9 @@ namespace IteraCompanyGroups.Services
 
             dbContext.Companies.Remove(companyToRemove);
             await dbContext.SaveChangesAsync();
+
+            // Registro de log
+            await _logService.CreateLogAsync(new Log { Message = $"Company {companyToRemove.Id} removed" });
         }
     }
 }

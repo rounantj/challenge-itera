@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 namespace IteraCompanyGroups.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("grupo")]
     public class GroupController : ControllerBase
     {
         private readonly IGroupService _groupService;
@@ -43,12 +43,7 @@ namespace IteraCompanyGroups.Controllers
         }
 
 
-        [HttpGet("all")]
-        public async Task<ActionResult<IEnumerable<Group>>> GetAllGroups()
-        {
-            var groups = await _groupService.GetAllGroupsAsync();
-            return Ok(groups);
-        }
+
 
         [HttpGet("{id}")]
         public async Task<ActionResult> GetCostsByGroupIdAsync(int id)
