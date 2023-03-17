@@ -58,4 +58,4 @@ Configuração da inicialização do banco de dados e da execução do seeder.
 
 O arquivo Startup.cs é fundamental para a configuração da aplicação e adição dos serviços necessários ao contêiner de injeção de dependência. Com uma configuração adequada, a aplicação é capaz de atender às necessidades dos usuários e garantir a segurança dos recursos protegidos.
 
-Ps.: O projeto utiliza o Entity Framework Core para interagir com um banco de dados MySQL e é configurado para criar a base de dados automaticamente caso ela ainda não exista. No entanto, é importante lembrar que é necessário criar um usuário com as permissões adequadas para acessar a base de dados e testar as funcionalidades do sistema. Além disso, a string de conexão do banco de dados deve ser configurada no arquivo appsettings.json antes de executar a aplicação.
+Ps.: O projeto utiliza o Entity Framework Core para interagir com um banco de dados MySQL e é configurado para criar a base de dados automaticamente caso ela ainda não exista. No entanto, é importante lembrar que é necessário que a string de conexão do banco de dados seja configurada no arquivo appsettings.json antes de executar a aplicação.
